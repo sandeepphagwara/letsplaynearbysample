@@ -948,6 +948,7 @@ class WP_User_Query {
 		$trailing_wild = ( 'trailing' === $wild || 'both' === $wild ) ? '%' : '';
 		$like          = $leading_wild . $wpdb->esc_like( $search ) . $trailing_wild;
 
+
 		foreach ( $columns as $column ) {
 			if ( 'ID' === $column ) {
 				$searches[] = $wpdb->prepare( "$column = %s", $search );

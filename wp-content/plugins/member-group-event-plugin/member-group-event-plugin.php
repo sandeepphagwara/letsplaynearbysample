@@ -22,3 +22,6 @@ require_once( plugin_dir_path( __FILE__ ) . 'includes/member-group.php');
 
 // Handle Members and Profile Management
 require_once( plugin_dir_path( __FILE__ ) . 'includes/member-profile.php');
+
+// Members Search Management
+require_once( plugin_dir_path( __FILE__ ) . 'includes/member-search.php');
