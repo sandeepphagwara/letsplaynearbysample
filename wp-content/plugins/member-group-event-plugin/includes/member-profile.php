@@ -3,165 +3,6 @@
 require_once( plugin_dir_path( __FILE__ ) . 'function.php');
 
 /***
- *  Common Methods 
- */
-// Get member profile common fields
-// generate_form_field( $type, $name, $label = '', $value = '', $options = array(), $placeholder = '', $attributes = array() )
-function cmr_get_member_profile_common_fields() {
-    ob_start();
-    
-    echo generate_form_field( 'text', 'email', 'Email', '', '', 'Enter your email', array( 'required' => 'required' ) );
-    echo generate_form_field( 'password', 'password', 'Password', '', '', 'Enter your password', array( 'required' => 'required' ) );
-    echo generate_form_field( 'text', 'phone_number', 'Phone Number', '', '', 'Enter your phone number', array( 'required' => 'required' ) );
-    echo generate_age_dropdown( 'user_age', '', 'Select Your Age', array( 'required' => 'required' ) );
-    ?><h3><?php _e('Location', 'your_text_domain'); ?></h3><?php
-    echo generate_form_field( 'text', 'city', 'City', '', '', 'City where you live', array( 'required' => 'required' ) );
-    echo generate_form_field( 'text', 'state', 'State', '', '', 'State where you live', array( 'required' => 'required' ) );
-
-    ?><h3><?php _e('Sports Interest', 'your_text_domain'); ?></h3><?php
-    echo generate_sports_checkbox( 'user_sports', [], 'Choose your favorite sport', array( 'required' => 'required' ) ); 
-    echo generate_skill_level_dropdown( 'skill_level', [], 'Your skill level', array( 'required' => 'required' ) );
-
-    ?><h3><?php _e('Biographical Infomation', 'your_text_domain'); ?></h3><?php
-    echo generate_form_field( 'textarea', 'user_about_me', 'About me', '', '', 'Write something about yourself here', array( 'required' => 'required' ) );
-
-    echo generate_form_field( 'file', 'profile_image', 'Profile picture', '', '', 'Choose your profile picture', array( 'required' => 'required' ) ); 
-    return ob_get_clean();
-}
-
-// Add and update common Fields for Member and Profle
-function cmr_add_update_member_profile_common_fields($user_id){
-
-    if (isset($_POST['phone_number'])) {
-        update_user_meta($user_id, 'phone_number', sanitize_text_field($_POST['phone_number']));
-    }
-
-    if (isset($_POST['user_age'])) {
-        update_user_meta($user_id, 'user_age', sanitize_text_field($_POST['user_age']));
-    }
-
-    if (isset($_POST['city'])) {
-        update_user_meta($user_id, 'city', sanitize_text_field($_POST['city']));
-    }
-
-    if (isset($_POST['state'])) {
-        update_user_meta($user_id, 'state', sanitize_text_field($_POST['state']));
-    }
-
-    if ( isset( $_POST['user_sports'] ) ) {
-        // Sanitize the array of selected sports
-        $selected_sports = array_map( 'sanitize_text_field', $_POST['user_sports'] );
-        update_user_meta($user_id, 'user_sports', $selected_sports);
-
-        // Process the selected sports (save to database, send email, etc.)
-    }
-
-    if (isset($_POST['skill_level'])) {
-        $selected_skill_level = array_map( 'sanitize_text_field', $_POST['skill_level'] );
-        update_user_meta($user_id, 'skill_level', $selected_skill_level);
-    }
-
-    if (isset($_POST['user_about_me'])) {
-        update_user_meta($user_id, 'user_about_me', sanitize_text_field($_POST['user_about_me']));
-    }
-
-    // Handle image upload
-    if (isset($_FILES['profile_image'])) {
-        $profile_image = $_FILES['profile_image'];
-        $uploaded_image_url = upload_profile_image($profile_image);
-        update_user_meta($user_id, 'profile_image', $uploaded_image_url);  
-    }
-
-}
-
-/***
- *  Member Registration 
- */
-
-// Hook into WordPress initialization to register the form and process form submissions
-function cmr_register_member_form() {
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['cmr_register_member'])) {
-        cmr_handle_member_registration();
-    }
-    echo cmr_get_registration_form();
-}
-add_shortcode('cmr_register_member_form', 'cmr_register_member_form');
-
-// Display registration form
-function cmr_get_registration_form() {
-    ob_start(); // Start output buffering
-
-    if ( !empty( $errors ) ) {
-        foreach ( $errors as $error ) {
-            echo '<div class="error-message">' . esc_html( $error ) . '</div>';
-        }
-    }
-    ?>
-    <form action="" method="post" enctype="multipart/form-data">
-    <h3><?php _e('Personal Information', 'your_text_domain'); ?></h3>
-        <?php echo generate_form_field( 'text', 'username', 'Username', '', '', 'Enter your username', array( 'required' => 'required' ) ); 
-            echo cmr_get_member_profile_common_fields(); 
-        ?>
-        <br><input type="submit" name="cmr_register_member" value="Register Member">
-    </form>
-    <?php
-    return ob_get_clean();
-}
-
-// Handle the form submission and register the member
-function cmr_handle_member_registration() {
-    if (!isset($_POST['username']) || !isset($_POST['email']) || !isset($_POST['password'])) {
-        return; // Prevent processing if the required fields are missing
-    }
-
-    $username = sanitize_text_field($_POST['username']);
-    $email = sanitize_email($_POST['email']);
-    $password = sanitize_text_field($_POST['password']);
-    
-    $userdata = array(
-        'user_login'    => $username,
-        'user_email'    => $email,
-        'user_pass'     => $password,
-        'role'          => 'subscriber', // Assign role as Subscriber
-    );
-
-    // Create the user
-    $user_id = wp_insert_user( $userdata );
-
-
-    
-    if (!is_wp_error($user_id)) {
-        // If the user was created successfully, add custom fields (user meta)
-
-        cmr_add_update_member_profile_common_fields($user_id);
-        
-        // Optionally, log the user in after successful registration
-        wp_set_current_user( $user_id );
-        wp_set_auth_cookie( $user_id );
-
-        // Debugging: Ensure redirect works
-        // Uncomment to log the redirect URL
-        error_log('Redirecting to: ' . home_url('/members'));
-
-        // Send email after successful registration
-        $subject = 'Welcome to Our Site!';
-        $message = 'Hello ' . $username . ',\n\nWelcome to our website! We are glad to have you as a member.';
-        // wp_mail($email, $subject, $message);  // Send email
-
-        wp_redirect(home_url('/members'));
-        // Redirect the user to their profile page
-        // wp_redirect( get_edit_user_link( $user_id ) );
-        
-        exit;
-    } else {
-        // Handle errors
-        $errors[] = $user_id->get_error_message();
-    }
-}
-
-
-
-/***
  *  View user profile
  */
 
@@ -176,7 +17,7 @@ function display_users_profile() {
     
     // echo do_shortcode('[display_users_profile]');
     ?>
-
+    
     <ul>
         <?php 
             // Get the current user's profile image
@@ -336,6 +177,129 @@ function display_fancy_user_profile(){
 }
 
 add_shortcode('display_fancy_user_profile', 'display_fancy_user_profile'); 
+
+
+
+function display_fancy_user_profile2(){
+
+    if ( ! is_user_logged_in() ) {
+        wp_redirect( wp_login_url() );  // Redirect to login page if the user is not logged in
+        exit;
+    }
+    ob_start();
+    
+    // echo do_shortcode('[display_users_profile]');
+ 
+    // Get the current user's profile image
+    $user_id = get_current_user_id();
+    $profile_image = get_user_meta($user_id, 'profile_image', true);
+    $profile_image = $profile_image ? esc_url($profile_image) : esc_url(get_template_directory_uri() . '/images/default-profile.jpg');
+    ?> 
+
+    <div class="profile-container">
+        <div class="left-sidebar">
+            <div class="profile-image-wrapper">
+                <?php echo '<img src="' . esc_url($profile_image) . '" alt="Profile Image" class="profile-image" />'; ?>
+            </div>
+            <h3><?php echo esc_attr( strtoupper(wp_get_current_user()->user_login) ); ?></h3>
+            <p><?php echo esc_attr( get_user_meta( get_current_user_id(), 'user_age', true ) ); ?>, <?php echo esc_attr( get_user_meta( get_current_user_id(), 'user_gender', true ) ); ?></p>
+            <p><?php echo esc_attr( get_user_meta( get_current_user_id(), 'city', true ) ); ?>, <?php echo esc_attr( get_user_meta( get_current_user_id(), 'state', true ) ); ?></p>
+            <p><?php echo esc_attr( (get_user_meta( get_current_user_id(), 'phone_number', true )) ); ?>, <?php echo esc_attr( wp_get_current_user()->user_email ); ?></p>
+        </div>
+
+        <div class="right-column">
+            <h3>About Me</h3>
+            <p><?php echo esc_attr( get_user_meta( get_current_user_id(), 'user_about_me', true ) ); ?></p>
+            <h3>Sports - <?php 
+                    $skil_level =  get_user_meta( get_current_user_id(), 'skill_level', true ); 
+                    echo is_array($skil_level) ? implode("", $skil_level) : '';
+                ?></h3>
+                <p><?php
+                    $user_sports = get_user_meta( get_current_user_id(), 'user_sports', true );
+                    echo is_array($user_sports) ? implode(" ", $user_sports) : '' ;
+                    ?></p>
+            <h5>My Groups</h5>
+            <p>5 years of experience in frontend development...</p>
+            <h5>My Events</h5>
+            <p>5 years of experience in frontend development...</p>
+        </div>
+    </div>
+
+    <?php
+    return ob_get_clean();
+}
+
+add_shortcode('display_fancy_user_profile2', 'display_fancy_user_profile2'); 
+
+/**
+ * 
+
+function display_fancy_user_profile2(){
+
+    if ( ! is_user_logged_in() ) {
+        wp_redirect( wp_login_url() );  // Redirect to login page if the user is not logged in
+        exit;
+    }
+    ob_start();
+    
+    // echo do_shortcode('[display_users_profile]');
+ 
+    // Get the current user's profile image
+    $user_id = get_current_user_id();
+    $profile_image = get_user_meta($user_id, 'profile_image', true);
+    ?>  
+        
+        <div class="profile-container">
+            <div class="profile-header">
+                <img src="profile-image.jpg" alt="Profile Picture" class="profile-image">
+                <?php
+                    if ($profile_image) {
+                        echo '<img src="' . esc_url($profile_image) . '" alt="Profile Image" class="profile-image" />';
+                    } else {
+                        // Fallback image if not set
+                        echo '<img src="' . esc_url(get_template_directory_uri() . '/images/default-profile.jpg') . '" alt="Profile Image" class="profile-image" />';
+                    }
+                ?>
+                <div class="profile-info">
+                    <h2 class="username"><?php echo esc_attr( wp_get_current_user()->user_login ); ?></h2>
+                    <p class="age">Age: <?php echo esc_attr( get_user_meta( get_current_user_id(), 'user_age', true ) ); ?></p>
+                    <p class="gender">Gender: Male</p>
+                </div>
+            </div>
+            
+            <div class="contact-info">
+                <p class="phone">Phone: <?php echo esc_attr( get_user_meta( get_current_user_id(), 'phone_number', true ) ); ?></p>
+                <p class="city">City: <?php echo esc_attr( get_user_meta( get_current_user_id(), 'city', true ) ); ?></p>
+                <p class="state">State: <?php echo esc_attr( get_user_meta( get_current_user_id(), 'state', true ) ); ?></p>
+            </div>
+
+            <div class="sports-info">
+                <p class="sports">Sports: <?php
+                    $user_sports = get_user_meta( get_current_user_id(), 'user_sports', true );
+                    echo is_array($user_sports) ? implode(" ", $user_sports) : '' ;
+                    ?>
+                </p>
+                <p class="sports">Skill level:  <?php 
+                    $skil_level =  get_user_meta( get_current_user_id(), 'skill_level', true ); 
+                    echo is_array($skil_level) ? implode("", $skil_level) : '';
+                ?>
+                </p>
+            </div>
+
+            <div class="description">
+                <h3>About me</h3>
+                <p><?php echo esc_attr( get_user_meta( get_current_user_id(), 'user_about_me', true ) ); ?></p>
+            </div>
+        </div>
+    <?php
+    return ob_get_clean();
+}
+
+add_shortcode('display_fancy_user_profile2', 'display_fancy_user_profile2'); 
+
+ */
+
+
 /***
  *  Edit user profile button
  */

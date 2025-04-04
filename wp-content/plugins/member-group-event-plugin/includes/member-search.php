@@ -1,35 +1,30 @@
 <?php
 
 
-function my_plugin_enqueue_styles() {
-    wp_enqueue_style('my-plugin-styles', plugin_dir_url(__FILE__) . '../assets/styles.css');
-}
-add_action('wp_enqueue_scripts', 'my_plugin_enqueue_styles');
-
-
 require_once( plugin_dir_path( __FILE__ ) . 'function.php');
 
 // Shortcode for displaying the Member search form
 function display_member_search_form() {
     ob_start();
     ?>
-    <h2 class="wp-block-heading">Search</h2>
-    <div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-2 wp-block-columns-is-layout-flex">
+    <div class="member-search-container">
+        <h3>Search</h3>
         <form method="GET" action="<?php echo esc_url( $_SERVER['REQUEST_URI'] ); ?>">
-                <p>
-                    <?php echo generate_sports_checkbox( 'user_sports', [], 'Choose your favorite sport', array( 'required' => 'required' ) );?>
-                </p>
-                <p>
-                    <label for="city">City:</label>
-                    <input type="text" name="city" required />
-                </p>
-                <p>
-                    <label for="state">State:</label>
-                    <input type="text" name="state" required />
-                </p>
-                <p>
-                    <input type="submit" name="submit_searh" value="Search"/>
-                </p>
+            <div class="form-group-full form-radio">
+                <label for="sports">Select sports</label>
+                <?php echo generate_sports_checkbox1( 'user_sports', [], 'Choose your favorite sport', array( 'required' => 'required' ), 'Search' );?>
+            </div>
+            <div class="member-search-columns">
+                <label for="city">City:</label>
+                <input type="text" name="city" required />
+                </div>
+            <div class="member-search-columns">
+                <label for="state">State:</label>
+                <input type="text" name="state" required />
+                </div>
+            <div class="member-search-button">
+                <input type="submit" name="submit_searh" value="Search"/>
+                </div>
         </form>
     </div>
     <?php
@@ -76,7 +71,8 @@ function search_for_members($sport, $city, $state) {
     if (!empty($user_query->results)) {
        
     ?> 
-    <h2>Search Results for <?php echo esc_html($sport); ?></h2>
+    <div class="member-search-container">
+    <h3><?php echo esc_html($sport); ?> Players</h3>
     <div class="member-grid">
     <?php
         foreach ($user_query->results as $user) {
@@ -105,6 +101,7 @@ function search_for_members($sport, $city, $state) {
     } else {
         echo 'No users found based on your criteria.';
     }
+    ?> </div><?php
     
 }
 

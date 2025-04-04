@@ -91,7 +91,7 @@ function generate_skill_level_dropdown( $name, $selected_values ='', $label = 'S
     // Start building the HTML for the dropdown field
     $html = '<p>';
     $html .= '<label for="' . esc_attr( $name ) . '">' . esc_html( $label ) . '</label>';
-    $html .= '<select name="' . esc_attr( $name ) . '[]" id="' . esc_attr( $name ) . '"';
+    $html .= '<select name="' . esc_attr( $name ) . '" id="' . esc_attr( $name ) . '"';
 
     // Add extra attributes (e.g., required, etc.)
     if ( ! empty( $attributes ) ) {
@@ -113,19 +113,53 @@ function generate_skill_level_dropdown( $name, $selected_values ='', $label = 'S
     return $html;
 }
 
+function generate_membership_type_dropdown( $name, $selected_values ='', $label = 'Membership Type', $attributes = array() ) {
+    // List of sports for the dropdown
+    $membership_type_options = array(
+        'Player' => 'Player',
+        'Coach' => 'Coach',
+        'Trainer' => 'Trainer',
+        'Physically Challenged Player' => 'Physically Challenged Player',
+        'Sports Complex Owner' => 'Sports Complex Owner',
+    );
+
+    // Start building the HTML for the dropdown field
+    $html = '';
+    $html .= '<label for="' . esc_attr( $name ) . '">' . esc_html( $label ) . '</label>';
+    $html .= '<select name="' . esc_attr( $name ) . '" id="' . esc_attr( $name ) . '"';
+
+    // Add extra attributes (e.g., required, etc.)
+    if ( ! empty( $attributes ) ) {
+        foreach ( $attributes as $key => $attr_value ) {
+            $html .= ' ' . esc_attr( $key ) . '="' . esc_attr( $attr_value ) . '"';
+        }
+    }
+
+    $html .= '>';
+
+    // Loop through the sports options and create <option> elements
+    foreach ( $membership_type_options as $key => $membership_type ) {
+        $html .= '<option value="' . esc_attr( $key ) . '" ' . ( ( $key === $selected_values ) ? 'selected="selected"' : '' ) . '>' . esc_html( $membership_type ) . '</option>';
+    }
+
+    $html .= '</select>';
+
+    return $html;
+}
+
 function generate_sports_checkbox( $name, $selected_values = array(), $label = 'Select Your Sports', $attributes = array() ) {
     // List of sports for the checkboxes
     $sports_options = array(
-        'badminton' => 'Badminton',
-        'tennis' => 'Tennis',
-        'football' => 'Football',
-        'basketball' => 'Basketball',
-        'cricket' => 'Cricket',
-        'volleyball' => 'Volleyball'
+        'Badminton' => 'Badminton',
+        'Tennis' => 'Tennis',
+        'Football' => 'Football',
+        'Basketball' => 'Basketball',
+        'Cricket' => 'Cricket',
+        'Volleyball' => 'Volleyball'
     );
 
     // Start building the HTML for the checkboxes
-    $html = '<p>';
+    $html = '';
     $html .= '<label>' . esc_html( $label ) . '</label><br>';
 
     // Loop through the sports options and create <input type="checkbox">
@@ -135,18 +169,76 @@ function generate_sports_checkbox( $name, $selected_values = array(), $label = '
         $html .= '</label><br>';
     }
 
-    $html .= '</p>';
+    return $html;
+}
+
+
+function generate_sports_checkbox1( $name, $selected_values = array(), $label = 'Select Your Sports', $attributes = array(), $style= 'Register' ) {
+    // List of sports for the checkboxes
+    $sports = [
+        ["name" => "Badminton", "icon" => "fas fa-shuttlecock"],
+        ["name" => "Football", "icon" => "fas fa-football-ball"],
+        ["name" => "Baseball", "icon" => "fas fa-baseball-ball"],
+        ["name" => "Tennis", "icon" => "fas fa-tennis-ball"],
+        ["name" => "Table Tennis", "icon" => "fas fa-table-tennis"],
+        ["name" => "Pickel Ball", "icon" => "fas fa-pickleball"],
+        ["name" => "Squash", "icon" => "fas fa-squash-ball"],
+        ["name" => "Swimming", "icon" => "fas fa-swimmer"],
+        ["name" => "Basketball", "icon" => "fas fa-basketball-ball"],
+        [ "name" => "Golf", "icon" => "fas fa-golf-ball"],
+        ["name" => "Hiking", "icon" => "fas fa-hiking"],
+        ["name" => "Walking", "icon" => "fas fa-walking"],
+        ["name" => "Running", "icon" => "fas fa-running"],
+        ["name" => "Yoga", "icon" => "fas fa-user"],
+        ["name" => "Polo", "icon" => "fas fa-golf-flag-hole"],
+        ["name" => "Cycling", "icon" => "fas fa-bicycle"],
+        ["name" => "Hockey", "icon" => "fas fa-hockey-puck"],
+        ["name" => "Ice Hockey", "icon" => "fas fa-hockey-puck"],
+        ["name" => "Boxing", "icon" => "fas fa-glove-boxing"],
+        ["name" => "Rowing", "icon" => "fas fa-rowing"],
+        ["name" => "Mountain trailer", "icon" => "fas fa-hiking"],
+        ["name" => "Marathon", "icon" => "fas fa-running"],
+        ["name" => "Cricket", "icon" => "fas fa-cricket"],
+
+    ];
+
+    $html = '<div class="sports-container">';
+    // Loop through the sports array to create checkbox options
+    if($style == 'Register'){
+        foreach ($sports as $sport) {
+            $html .= '<div class="sport-card">';
+            $html .= '<i class="' . $sport['icon'] . '"></i>';
+            $html .= '<h3>' . $sport['name'] . '</h3>';
+            $html .= '<label>';
+            $html .= '<input type="checkbox" name="user_sports[]" value="' . $sport['name'] . '" > Select';
+            $html .= '</label>';
+            $html .= '</div>';
+        }
+    }
+    if($style == 'Search'){
+        foreach ($sports as $sport) {
+            $html .= '<div class="sport-card-search">';
+            $html .= '';
+            $html .= '<input type="checkbox" name="user_sports[]" id="' . $sport['name'] . '"    value="' . $sport['name'] . '">';
+            $html .= '<label for="' . $sport['name'] . '"><i class="' . $sport['icon'] . ' icon"></i>'. $sport['name'];
+            $html .= '</label></div>';
+        }
+    }
+   
+  
+    $html .='</div>';
 
     return $html;
 }
 
 
+
 function generate_age_dropdown( $name, $selected_value = '', $label = 'Select Your Age', $attributes = array() ) {
     // Define the range of ages (e.g., from 18 to 100)
-    $age_range = range( 18, 100 );
+    $age_range = range( 10, 100 );
 
     // Start building the HTML for the dropdown field
-    $html = '<p>';
+    $html = '';
     $html .= '<label for="' . esc_attr( $name ) . '">' . esc_html( $label ) . '</label>';
     $html .= '<select name="' . esc_attr( $name ) . '" id="' . esc_attr( $name ) . '" ';
 
@@ -165,7 +257,6 @@ function generate_age_dropdown( $name, $selected_value = '', $label = 'Select Yo
     }
 
     $html .= '</select>';
-    $html .= '</p>';
 
     return $html;
 }

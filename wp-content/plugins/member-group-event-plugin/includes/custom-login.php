@@ -14,16 +14,17 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+
 // Start output buffering to capture any unwanted output
 ob_start();
 
 // Shortcode to display the login form
 function custom_login_form_shortcode() {
     // If the user is logged in, return nothing or a custom message
-    if (is_user_logged_in()) {
-        return '<p>You are already logged in.</p>';
-    }
-
+    // if (is_user_logged_in()) {
+       // return '<p>You are already logged in.</p>';
+    // }
+    $error = false;
     // Handle the login form submission
     if (isset($_POST['submit_login'])) {
         // Sanitize and get the login details
@@ -35,7 +36,7 @@ function custom_login_form_shortcode() {
 
         if (is_wp_error($user)) {
             // Return the error message if login fails
-            return '<p class="error">Invalid username or password.</p>';
+            $error =  true;
         } else {
             // Set the user and log them in
             wp_set_current_user($user->ID);
@@ -50,23 +51,38 @@ function custom_login_form_shortcode() {
     // Form HTML
     ob_start();
     ?><div class="login-container">
-    <h2>Login</h2>
-    <form action="" method="POST">
-        <p>
-            <label for="username">Username:</label>
-            <input type="text" name="username" required />
-        </p>
-        <p>
-            <label for="password">Password:</label>
-            <input type="password" name="password" required />
-        </p>
-        <p>
-            <input type="submit" name="submit_login" value="Login" class="login-button" />
-        </p>
-    </form>
-    <h5>Don't have an account? <a href="<?php echo esc_url(home_url('/register')); ?>">Register here</a></h5>
-    <h5><a href="<?php echo wp_lostpassword_url(); ?>">Forgot your password?</a></h5>
-</div>
+        <div class="login-left-sidebar">
+            <h2>Login</h2>
+            <?php 
+                if($error){
+                    echo '<p class="error">Invalid username or password.</p>';
+                }
+            ?>
+            <form action="" method="POST">
+                <p>
+                    <label for="username">Username:</label>
+                    <input type="text" name="username" required />
+                </p>
+                <p>
+                    <label for="password">Password:</label>
+                    <input type="password" name="password" required />
+                </p>
+                <p>
+                    <input type="submit" name="submit_login" value="Login" class="login-button" />
+                </p>
+            </form>
+            <h5>Don't have an account? <a href="<?php echo esc_url(home_url('/register')); ?>">Register here</a></h5>
+            <h5><a href="<?php echo wp_lostpassword_url(); ?>">Forgot your password?</a></h5>
+        </div>
+        <div class="login-right-sidebar">
+            <h2> Get Started </h2>
+            <h2> Register </h2>
+            <h2> Login </h2>
+            <h2> Search for members or Group or Event and Join </h2>
+            <h2> Create your own Group or Event and invite others to join to play your Favorite sports  </h2>
+
+        </div>
+    </div>
     <?php
     return ob_get_clean();
 }

@@ -1,3 +1,5 @@
+<?php
+
 // Shortcode to display the message form
 function member_send_message_form($atts) {
     ob_start();
